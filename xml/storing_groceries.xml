@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <Action ID="MoveTo" distance_tolerance="1" tf_frame="table"/>
+            <KeepRunningUntilFailure>
+                <Inverter>
+                    <ReactiveFallback>
+                        <Condition ID="IsDetected" confidence="0.6" entity="table" max_entities="1"/>
+                        <Action ID="LookArround"/>
+                    </ReactiveFallback>
+                </Inverter>
+            </KeepRunningUntilFailure>
+            <Action ID="MoveTo" distance_tolerance="0.2" tf_frame="table"/>
+            <Action ID="DetectNearestEntity" tf_frame="nearest"/>
+            <Action ID="LookAt" tf_frame="table"/>
+            <Action ID="PickObject" objet_tf="nearest"/>
+            <KeepRunningUntilFailure>
+                <Inverter>
+                    <SequenceStar>
+                        <Action ID="MoveArmTo" tf_frame="camera_frame" tolerance="0.6"/>
+                        <Condition ID="IsDetected" confidence="0.6" entity="nearest" max_entities="1"/>
+                    </SequenceStar>
+                </Inverter>
+            </KeepRunningUntilFailure>
+            <Action ID="MoveTo" distance_tolerance="0" tf_frame="shelf"/>
+            <KeepRunningUntilFailure>
+                <Inverter>
+                    <ReactiveFallback>
+                        <Condition ID="IsDetected" confidence="0.6" entity="shelf" max_entities="1"/>
+                        <Action ID="LookArround"/>
+                    </ReactiveFallback>
+                </Inverter>
+            </KeepRunningUntilFailure>
+            <Action ID="LookAt" tf_frame="shelf"/>
+            <Action ID="DetermineObjectPosition" tf_frame="nearest" tf_frame_to_put="to_place"/>
+            <Action ID="PlaceObject" tf_frame="to_place"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="AskForSomething">
+            <input_port default="name" name="Intention"/>
+            <output_port name="intention_value"/>
+        </Action>
+        <Action ID="CalculateGoal">
+            <inout_port name="goal"/>
+        </Action>
+        <Condition ID="CheckStop"/>
+        <Action ID="DetectEntity">
+            <input_port default="person" name="entity"/>
+        </Action>
+        <Action ID="DetectNearestEntity">
+            <output_port name="tf_frame"/>
+        </Action>
+        <Action ID="DetermineObjectPosition">
+            <input_port default="nearest" name="tf_frame"/>
+            <output_port default="to_place" name="tf_frame_to_put"/>
+        </Action>
+        <SubTree ID="Dialog">
+            <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
+        </SubTree>
+        <Action ID="DialogConfirmation">
+            <input_port name="prompt"/>
+        </Action>
+        <Action ID="Dialogue">
+            <input_port default="Hi welcome to the party" name="say_text"/>
+        </Action>
+        <Action ID="ExtractBagPosition">
+            <output_port name="position"/>
+        </Action>
+        <Action ID="FollowEntity">
+            <input_port default="person" name="entity_frame"/>
+        </Action>
+        <Action ID="GoBack">
+            <input_port default="0.2" name="velocity"/>
+        </Action>
+        <Condition ID="HasEntityStopped">
+            <input_port name="entity_frame"/>
+            <input_port name="tolerance"/>
+        </Condition>
+        <Action ID="InfferCategory">
+            <output_port name="category"/>
+            <input_port name="class_id"/>
+        </Action>
+        <Condition ID="IsDetected">
+            <input_port default="0.6" name="confidence"/>
+            <input_port default="person" name="entity"/>
+            <input_port default="1" name="max_entities"/>
+        </Condition>
+        <Condition ID="IsEntityMoving">
+            <input_port default="0.5" name="distance_tolerance"/>
+        </Condition>
+        <Condition ID="IsPointing">
+            <output_port default="front" name="tf_target">the tf frame of the object to navigate</output_port>
+        </Condition>
+        <Condition ID="IsSeateble">
+            <output_port name="seateble_tf"/>
+        </Condition>
+        <Action ID="Listen">
+            <output_port name="extracted_info">String list of extracted information</output_port>
+            <output_port name="say_text">String to speak</output_port>
+        </Action>
+        <Action ID="LookArround"/>
+        <Action ID="LookAt">
+            <input_port name="tf_frame"/>
+        </Action>
+        <Action ID="LookAtPerson"/>
+        <Action ID="MoveArmTo">
+            <input_port name="tf_frame"/>
+            <input_port name="tolerance"/>
+        </Action>
+        <Action ID="MoveArmToPredefined">
+            <input_port default="offer" name="position"/>
+        </Action>
+        <Action ID="MoveGripperTo">
+            <input_port default="open" name="Pos"/>
+        </Action>
+        <Action ID="MoveHeadTo">
+            <input_port name="angle"/>
+        </Action>
+        <Action ID="MoveTo">
+            <input_port default="0" name="distance_tolerance"/>
+            <input_port default="object1" name="tf_frame"/>
+        </Action>
+        <Action ID="PickObject">
+            <input_port default="nearest" name="objet_tf"/>
+        </Action>
+        <Action ID="PlaceObject">
+            <input_port default="to_place" name="tf_frame"/>
+        </Action>
+        <Action ID="PrintTarget">
+            <inout_port name="target"/>
+        </Action>
+        <Action ID="Speak">
+            <input_port name="say_text"/>
+        </Action>
+        <Condition ID="isListened">
+            <output_port name="gotten_parameters"/>
+            <input_port name="needed_parameters"/>
+            <output_port name="say_text"/>
+        </Condition>
+        <Condition ID="isPersonDetected">
+            <output_port name="say_text"/>
+        </Condition>
+        <Condition ID="isReceived">
+            <output_port name="needed_parameters"/>
+            <input_port name="received_parameters"/>
+        </Condition>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
