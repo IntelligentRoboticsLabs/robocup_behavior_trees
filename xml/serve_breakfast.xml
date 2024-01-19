@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <SequenceStar>
+            <RetryUntilSuccessful num_attempts="20">
+                <Sequence name="Go To table1">
+                    <Action Goal="Kitchen" ID="MoveTo" distance="0.5"/>
+                    <ReactiveFallback>
+                        <Condition ID="IsDetected" Object="Table" position="Table"/>
+                        <Action ID="Patrol" velocity="0.3"/>
+                    </ReactiveFallback>
+                    <Action Goal="Table1" ID="MoveTo" distance="0.5"/>
+                </Sequence>
+            </RetryUntilSuccessful>
+            <Sequence name="Place Bowl">
+                <ReactiveFallback name="DetectObject">
+                    <Condition ID="IsDetected" Object="Bowl" position="Bowl"/>
+                    <Action ID="LookAround"/>
+                </ReactiveFallback>
+                <Action ID="LookAt" postion="bowl"/>
+                <Action ID="PickObject" tf="Bowl"/>
+                <Action Goal="Table2" ID="MoveTo" distance="0.5"/>
+                <Action ID="FindEmptyPlace" position="table2_free" where="table2"/>
+                <Action ID="PlaceObject" left_position="bowl" position="table2_free"/>
+            </Sequence>
+            <Sequence name="Place Cereal">
+                <Action Goal="Table1" ID="MoveTo" distance="0.5"/>
+                <ReactiveFallback name="DetectObject">
+                    <Condition ID="IsDetected" Object="Cereal" position="Cereal"/>
+                    <Action ID="LookAround"/>
+                </ReactiveFallback>
+                <Action ID="PickObject" tf="Cereal"/>
+                <Action Goal="Table2" ID="MoveTo" distance="0.5"/>
+                <Action ID="PourObjectToObject2" position_obj2="bowl"/>
+                <Action ID="FindEmptyPlace" position="table2_free" where="table2"/>
+                <Action ID="PlaceObject" left_position="cereal" position="table2_free"/>
+            </Sequence>
+            <Sequence name="Place Milk">
+                <Action Goal="Table1" ID="MoveTo" distance="0.5"/>
+                <ReactiveFallback name="DetectObject">
+                    <Condition ID="IsDetected" Object="Milk" position="Milk"/>
+                    <Action ID="LookAround"/>
+                </ReactiveFallback>
+                <Action ID="PickObject" tf="Milk"/>
+                <Action Goal="Table2" ID="MoveTo" distance="0.5"/>
+                <Action ID="FindEmptyPlace" position="table2_free" where="table2"/>
+                <Action ID="PourObjectToObject2" position_obj2="bowl"/>
+                <Action ID="PlaceObject" left_position="milk_position" position="table2_free"/>
+            </Sequence>
+            <Sequence name="Place Spoon">
+                <Action Goal="Table1" ID="MoveTo" distance="0.5"/>
+                <ReactiveFallback name="DetectObject">
+                    <Condition ID="IsDetected" Object="Spoon" position="Spoon"/>
+                    <Action ID="LookAround"/>
+                </ReactiveFallback>
+                <Action ID="PickObject" tf="Spoon"/>
+                <Action ID="FindEmptyPlace" position="table2_free" where="table2"/>
+                <Action Goal="Table2" ID="MoveTo" distance="0.5"/>
+                <Action ID="PlaceObject" left_position="spoon_position" position="table2_free"/>
+            </Sequence>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="DetectObjet">
+            <input_port default="Table" name="Object"/>
+            <output_port name="tf"/>
+        </Action>
+        <Action ID="FindEmptyPlace">
+            <output_port default="position" name="position"/>
+            <input_port default="table" name="where"/>
+        </Action>
+        <Condition ID="IsDetected">
+            <input_port default="Table" name="Object"/>
+            <output_port default="Table" name="position"/>
+        </Condition>
+        <Action ID="LookAround"/>
+        <Action ID="LookAt">
+            <input_port default="bowl" name="postion"/>
+        </Action>
+        <Action ID="MoveTo">
+            <input_port default="Kitchen" name="Goal"/>
+            <input_port default="0.5" name="distance"/>
+        </Action>
+        <Action ID="Patrol">
+            <input_port default="0.3" name="velocity"/>
+        </Action>
+        <Action ID="PickObject">
+            <input_port default="Bowl" name="tf"/>
+        </Action>
+        <Action ID="PlaceObject">
+            <output_port default="tf" name="left_position"/>
+            <input_port default="tf" name="position"/>
+        </Action>
+        <Action ID="PourObjectToObject2">
+            <input_port default="tf2" name="position_obj2"/>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
