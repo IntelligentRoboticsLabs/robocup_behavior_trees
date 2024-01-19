@@ -2,41 +2,44 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <Sequence>
-            <Action ID="MoveTo" distance_tolerance="1" tf_frame="table"/>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <ReactiveFallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="table" max_entities="1"/>
-                        <Action ID="LookArround"/>
-                    </ReactiveFallback>
-                </Inverter>
-            </KeepRunningUntilFailure>
-            <Action ID="MoveTo" distance_tolerance="0.2" tf_frame="table"/>
-            <Action ID="DetectNearestEntity" tf_frame="nearest"/>
-            <Action ID="LookAt" tf_frame="table"/>
-            <Action ID="PickObject" objet_tf="nearest"/>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <SequenceStar>
-                        <Action ID="MoveArmTo" tf_frame="camera_frame" tolerance="0.6"/>
-                        <Condition ID="IsDetected" confidence="0.6" entity="nearest" max_entities="1"/>
-                    </SequenceStar>
-                </Inverter>
-            </KeepRunningUntilFailure>
-            <Action ID="MoveTo" distance_tolerance="0" tf_frame="shelf"/>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <ReactiveFallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="shelf" max_entities="1"/>
-                        <Action ID="LookArround"/>
-                    </ReactiveFallback>
-                </Inverter>
-            </KeepRunningUntilFailure>
-            <Action ID="LookAt" tf_frame="shelf"/>
-            <Action ID="DetermineObjectPosition" tf_frame="nearest" tf_frame_to_put="to_place"/>
-            <Action ID="PlaceObject" tf_frame="to_place"/>
-        </Sequence>
+        <Repeat num_cycles="15">
+            <Sequence>
+                <Action ID="MoveTo" distance_tolerance="1" tf_frame="table"/>
+                <KeepRunningUntilFailure>
+                    <Inverter>
+                        <ReactiveFallback>
+                            <Condition ID="IsDetected" confidence="0.6" entity="table" max_entities="1"/>
+                            <Action ID="LookArround"/>
+                        </ReactiveFallback>
+                    </Inverter>
+                </KeepRunningUntilFailure>
+                <Action ID="MoveTo" distance_tolerance="0.2" tf_frame="table"/>
+                <KeepRunningUntilFailure>
+                    <Inverter>
+                        <Sequence name="">
+                            <Action ID="LookAt" tf_frame="table"/>
+                            <Action ID="DetectNearestEntity" tf_frame="nearest"/>
+                            <Action ID="PickObject" objet_tf="nearest"/>
+                            <Action ID="MoveArmTo" tf_frame="camera_frame" tolerance="0.6"/>
+                            <Condition ID="IsDetected" confidence="0.6" entity="nearest" max_entities="1"/>
+                            <Action ID="MoveArmToPredefined" position="home"/>
+                        </Sequence>
+                    </Inverter>
+                </KeepRunningUntilFailure>
+                <Action ID="MoveTo" distance_tolerance="0" tf_frame="shelf"/>
+                <KeepRunningUntilFailure>
+                    <Inverter>
+                        <ReactiveFallback>
+                            <Condition ID="IsDetected" confidence="0.6" entity="shelf" max_entities="1"/>
+                            <Action ID="LookArround"/>
+                        </ReactiveFallback>
+                    </Inverter>
+                </KeepRunningUntilFailure>
+                <Action ID="LookAt" tf_frame="shelf"/>
+                <Action ID="DetermineObjectPosition" tf_frame="nearest" tf_frame_to_put="to_place"/>
+                <Action ID="PlaceObject" tf_frame="to_place"/>
+            </Sequence>
+        </Repeat>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
@@ -88,6 +91,7 @@
             <input_port default="0.6" name="confidence"/>
             <input_port default="person" name="entity"/>
             <input_port default="1" name="max_entities"/>
+            <output_port default="person_1" name="tf_frame"/>
         </Condition>
         <Condition ID="IsEntityMoving">
             <input_port default="0.5" name="distance_tolerance"/>
@@ -96,7 +100,7 @@
             <output_port default="front" name="tf_target">the tf frame of the object to navigate</output_port>
         </Condition>
         <Condition ID="IsSeateble">
-            <output_port name="seateble_tf"/>
+            <output_port name="tf_frame"/>
         </Condition>
         <Action ID="Listen">
             <output_port name="extracted_info">String list of extracted information</output_port>
