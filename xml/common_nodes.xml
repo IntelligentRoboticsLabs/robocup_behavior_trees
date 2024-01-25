@@ -2,59 +2,26 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <Repeat num_cycles="2">
-            <Sequence>
-                <Sequence>
-                    <Action ID="SetWaypoints" name="set waypoints from ros params"/>
-                    <Action ID="InitReceptionist"/>
-                </Sequence>
-                <Action ID="MoveTo" distance_tolerance="0" tf_frame="entrance"/>
-                <Action ID="Speak" say_text="Hi, this is tiago. Im ready to receive the party guests"/>
-                <RetryUntilSuccessful num_attempts="-1">
-                    <Fallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="person" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
-                        <Inverter>
-                            <Action ID="Speak" say_text="I cant see you, can you please stand in front of me"/>
-                        </Inverter>
-                        <Delay delay_msec="1000">
-                            <AlwaysFailure/>
-                        </Delay>
-                    </Fallback>
-                </RetryUntilSuccessful>
-                <Action ID="StoreDetection" entity="person" id="guest_1"/>
-                <Action ID="LookAt" tf_frame="person_1"/>
-                <RetryUntilSuccessful num_attempts="-1">
-                    <SequenceStar>
-                        <Sequence>
-                            <Action ID="AskForSomething" Intention="name" intention_value="{name_value}"/>
-                            <Action ID="DialogConfirmation" prompt="are you {name_value}"/>
-                        </Sequence>
-                        <Sequence>
-                            <Action ID="AskForSomething" Intention="favorite_drink" intention_value="{drink_value}"/>
-                            <Action ID="DialogConfirmation" prompt="is {drink_value} your choice of preference?"/>
-                        </Sequence>
-                    </SequenceStar>
-                </RetryUntilSuccessful>
-                <Action ID="Speak" say_text="Please follow me, i will get you to the  party"/>
-                <Action ID="MoveTo" distance_tolerance="0" tf_frame="party"/>
-                <ReactiveSequence>
-                    <ReactiveFallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="person" frames="{frames}" max_depth="2" max_entities="1" order="depth_nearest"/>
-                        <Action ID="GoBack" velocity="0.1"/>
-                    </ReactiveFallback>
-                    <Action ID="LookAt" tf_frame="{frames}"/>
-                    <Action ID="Speak" say_text="Hi {host_name} this is {name},and his favorite drink is {favorite_drink}"/>
-                </ReactiveSequence>
-                <ReactiveFallback>
-                    <Condition ID="IsSittable" tf_frame="chair_direction"/>
-                    <Action ID="LookAround"/>
-                </ReactiveFallback>
-                <Action ID="Speak" say_text="Please, you can sit overthere"/>
-                <Action ID="LookAt" tf_frame="chair_direction"/>
-                <Action ID="MoveArmTo" tf_frame="chair_direction" tolerance="0"/>
-                <Action ID="MoveArmToPredefined" position="home"/>
-            </Sequence>
-        </Repeat>
+        <Sequence>
+            <Condition ID="IsDetected" confidence="0.6" entity="person" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
+            <Action ID="AskForSomething" Intention="name" intention_value=""/>
+            <Action ID="PickObject" tf_frame="Bowl"/>
+            <Action ID="PlaceObject" left_position="tf" position="tf"/>
+            <Action ID="Speak" say_text=""/>
+            <Action ID="SetWaypoints"/>
+            <Action ID="DetectNearestEntity" tf_frame=""/>
+            <Action ID="MoveArmTo" tf_frame="" tolerance=""/>
+            <Action ID="GoBack" velocity="0.2"/>
+            <Action ID="DialogConfirmation" prompt=""/>
+            <Action ID="Patrol" velocity="0.3"/>
+            <Action ID="MoveTo" distance_tolerance="0" tf_frame="object1"/>
+            <Action ID="LookAround"/>
+            <Action ID="MoveArmToPredefined" position="offer"/>
+            <Action ID="FollowEntity" entity_frame="person"/>
+            <Action ID="FindEmptyPlace" position="position" where="table"/>
+            <Action ID="LookAt" tf_frame=""/>
+            <Action ID="MoveHeadTo" angle=""/>
+        </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
@@ -69,6 +36,20 @@
         <Action ID="DetectEntity">
             <input_port default="person" name="entity"/>
         </Action>
+        <Action ID="DetectNearestEntity">
+            <output_port name="tf_frame"/>
+        </Action>
+        <Action ID="DetectObjet">
+            <input_port default="Table" name="Object"/>
+            <output_port name="tf"/>
+        </Action>
+        <Action ID="DetermineObjectPosition">
+            <input_port default="nearest" name="tf_frame"/>
+            <output_port default="to_place" name="tf_frame_to_put"/>
+        </Action>
+        <SubTree ID="Dialog">
+            <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
+        </SubTree>
         <Action ID="DialogConfirmation">
             <input_port name="prompt"/>
         </Action>
@@ -77,6 +58,10 @@
         </Action>
         <Action ID="ExtractBagPosition">
             <output_port name="position"/>
+        </Action>
+        <Action ID="FindEmptyPlace">
+            <output_port default="position" name="position"/>
+            <input_port default="table" name="where"/>
         </Action>
         <Action ID="FollowEntity">
             <input_port default="person" name="entity_frame"/>
@@ -88,6 +73,13 @@
             <input_port name="entity_frame"/>
             <input_port name="tolerance"/>
         </Condition>
+        <Action ID="InfferCategory">
+            <output_port name="category"/>
+            <input_port name="class_id"/>
+        </Action>
+        <Action ID="IniGroceries"/>
+        <Action ID="InitBreakfast"/>
+        <Action ID="InitCarry"/>
         <Action ID="InitReceptionist"/>
         <Condition ID="IsDetected">
             <input_port default="0.6" name="confidence"/>
@@ -102,6 +94,9 @@
         </Condition>
         <Condition ID="IsPointing">
             <output_port default="front" name="tf_target">the tf frame of the object to navigate</output_port>
+        </Condition>
+        <Condition ID="IsSeateble">
+            <output_port name="tf_frame"/>
         </Condition>
         <Condition ID="IsSittable">
             <output_port name="tf_frame"/>
@@ -131,6 +126,19 @@
         <Action ID="MoveTo">
             <input_port default="0" name="distance_tolerance"/>
             <input_port default="object1" name="tf_frame"/>
+        </Action>
+        <Action ID="Patrol">
+            <input_port default="0.3" name="velocity"/>
+        </Action>
+        <Action ID="PickObject">
+            <input_port default="Bowl" name="tf_frame"/>
+        </Action>
+        <Action ID="PlaceObject">
+            <output_port default="tf" name="left_position"/>
+            <input_port default="tf" name="position"/>
+        </Action>
+        <Action ID="PourObjectToObject2">
+            <input_port default="tf2" name="position_obj2"/>
         </Action>
         <Action ID="PrintTarget">
             <inout_port name="target"/>
