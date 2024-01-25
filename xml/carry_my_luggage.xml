@@ -3,65 +3,61 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <ReactiveSequence>
-                        <Condition ID="IsDetected" confidence="0.6" entity="person" max_entities="1"/>
-                        <Condition ID="IsDetected" confidence="0.6" entity="bag" max_entities="2"/>
-                        <Condition ID="IsPointing" tf_target="front"/>
-                    </ReactiveSequence>
-                </Inverter>
-            </KeepRunningUntilFailure>
+            <Action ID="InitCarry"/>
+            <RetryUntilSuccessful num_attempts="-1">
+                <Sequence>
+                    <Condition ID="IsDetected" confidence="0.6" entity="person" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
+                    <Condition ID="IsDetected" confidence="0.6" entity="bag" frames="" max_depth="2" max_entities="2" order="depth_nearest"/>
+                    <Condition ID="IsPointing" tf_target="front"/>
+                </Sequence>
+            </RetryUntilSuccessful>
             <Action ID="MoveTo" distance_tolerance="0.5" tf_frame="bag_frame"/>
             <Action ID="MoveArmToPredefined" position="offer_clear_vision"/>
+            <Action ID="LookAt" tf_frame="person_1"/>
             <Action ID="Speak" name="Return RUNNING until it has stop talking" say_text="please put the bag in my gripper"/>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <Fallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="bag" max_entities="1"/>
-                        <Inverter>
-                            <Action ID="Speak" say_text="please put the bag in my gripper"/>
-                        </Inverter>
-                        <Delay delay_msec="2000">
-                            <AlwaysFailure/>
-                        </Delay>
-                    </Fallback>
-                </Inverter>
-            </KeepRunningUntilFailure>
+            <RetryUntilSuccessful num_attempts="-1">
+                <Fallback>
+                    <Condition ID="IsDetected" confidence="0.6" entity="bag" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
+                    <Inverter>
+                        <Action ID="Speak" say_text="please put the bag in my gripper"/>
+                    </Inverter>
+                    <Delay delay_msec="2000">
+                        <AlwaysFailure/>
+                    </Delay>
+                </Fallback>
+            </RetryUntilSuccessful>
             <Action ID="MoveArmToPredefined" position="home"/>
             <Action ID="Speak" name="RUNNING until it has stopped talking" say_text="Perfect, now i will follow you, when we arrive to the correct location please stop "/>
-            <KeepRunningUntilFailure>
+            <RetryUntilSuccessful num_attempts="-1">
                 <ReactiveSequence>
                     <ReactiveSequence>
                         <ReactiveFallback>
-                            <Condition ID="IsDetected" confidence="0.6" entity="person_1" max_entities="1"/>
+                            <Condition ID="IsDetected" confidence="0.6" entity="person_1" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
                             <Action ID="GoBack" name="always return running" velocity="0.2"/>
                         </ReactiveFallback>
                         <Condition ID="IsEntityMoving" distance_tolerance="0.5"/>
                         <Action ID="MoveTo" distance_tolerance="0" tf_frame="person_1"/>
                     </ReactiveSequence>
-                    <Inverter>
-                        <Action ID="DialogConfirmation" prompt="have we arrived to the destination?"/>
-                    </Inverter>
+                    <Action ID="DialogConfirmation" prompt="have we arrived to the destination?"/>
                 </ReactiveSequence>
-            </KeepRunningUntilFailure>
+            </RetryUntilSuccessful>
             <Action ID="MoveArmToPredefined" position="offer_clear_vision"/>
+            <Action ID="LookAt" tf_frame="person_1"/>
             <Action ID="Speak" name="RUNNING until it has stopped talking" say_text="Here is the bag, please take it"/>
-            <KeepRunningUntilFailure>
-                <Inverter>
-                    <Fallback>
-                        <Inverter>
-                            <Condition ID="IsDetected" confidence="0.6" entity="bag" max_entities="1"/>
-                        </Inverter>
-                        <Inverter>
-                            <Action ID="Speak" say_text="Please take the bag from my gripper"/>
-                        </Inverter>
-                        <Delay delay_msec="2000">
-                            <AlwaysFailure/>
-                        </Delay>
-                    </Fallback>
-                </Inverter>
-            </KeepRunningUntilFailure>
+            <RetryUntilSuccessful num_attempts="-1">
+                <Fallback>
+                    <Inverter>
+                        <Condition ID="IsDetected" confidence="0.6" entity="bag" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
+                    </Inverter>
+                    <Inverter>
+                        <Action ID="Speak" say_text="Please take the bag from my gripper"/>
+                    </Inverter>
+                    <Delay delay_msec="2000">
+                        <AlwaysFailure/>
+                    </Delay>
+                </Fallback>
+            </RetryUntilSuccessful>
+            <Action ID="Speak" name="RUNNING until it has stopped talking" say_text="I am going back to the hotel, have a nice day"/>
             <Action ID="MoveTo" distance_tolerance="0" tf_frame="odom"/>
         </Sequence>
     </BehaviorTree>
@@ -74,9 +70,27 @@
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
+        <Action ID="AskForSomething">
+            <input_port default="name" name="Intention"/>
+            <output_port name="intention_value"/>
+        </Action>
+        <Action ID="CalculateGoal">
+            <inout_port name="goal"/>
+        </Action>
         <Condition ID="CheckStop"/>
         <Action ID="DetectEntity">
             <input_port default="person" name="entity"/>
+        </Action>
+        <Action ID="DetectNearestEntity">
+            <output_port name="tf_frame"/>
+        </Action>
+        <Action ID="DetectObjet">
+            <input_port default="Table" name="Object"/>
+            <output_port name="tf"/>
+        </Action>
+        <Action ID="DetermineObjectPosition">
+            <input_port default="nearest" name="tf_frame"/>
+            <output_port default="to_place" name="tf_frame_to_put"/>
         </Action>
         <SubTree ID="Dialog">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
@@ -84,8 +98,15 @@
         <Action ID="DialogConfirmation">
             <input_port name="prompt"/>
         </Action>
+        <Action ID="Dialogue">
+            <input_port default="Hi welcome to the party" name="say_text"/>
+        </Action>
         <Action ID="ExtractBagPosition">
             <output_port name="position"/>
+        </Action>
+        <Action ID="FindEmptyPlace">
+            <output_port default="position" name="position"/>
+            <input_port default="table" name="where"/>
         </Action>
         <Action ID="FollowEntity">
             <input_port default="person" name="entity_frame"/>
@@ -97,10 +118,21 @@
             <input_port name="entity_frame"/>
             <input_port name="tolerance"/>
         </Condition>
+        <Action ID="InfferCategory">
+            <output_port name="category"/>
+            <input_port name="class_id"/>
+        </Action>
+        <Action ID="IniGroceries"/>
+        <Action ID="InitBreakfast"/>
+        <Action ID="InitCarry"/>
+        <Action ID="InitReceptionist"/>
         <Condition ID="IsDetected">
             <input_port default="0.6" name="confidence"/>
             <input_port default="person" name="entity"/>
+            <output_port name="frames">array of frames</output_port>
+            <input_port default="2" name="max_depth">value in meters</input_port>
             <input_port default="1" name="max_entities"/>
+            <input_port default="depth_nearest" name="order">[depth_nearest, left_to_right]^</input_port>
         </Condition>
         <Condition ID="IsEntityMoving">
             <input_port default="0.5" name="distance_tolerance"/>
@@ -108,9 +140,24 @@
         <Condition ID="IsPointing">
             <output_port default="front" name="tf_target">the tf frame of the object to navigate</output_port>
         </Condition>
+        <Condition ID="IsSeateble">
+            <output_port name="tf_frame"/>
+        </Condition>
+        <Condition ID="IsSittable">
+            <output_port name="tf_frame"/>
+        </Condition>
         <Action ID="Listen">
             <output_port name="extracted_info">String list of extracted information</output_port>
             <output_port name="say_text">String to speak</output_port>
+        </Action>
+        <Action ID="LookAround"/>
+        <Action ID="LookAt">
+            <input_port name="tf_frame"/>
+        </Action>
+        <Action ID="LookAtPerson"/>
+        <Action ID="MoveArmTo">
+            <input_port name="tf_frame"/>
+            <input_port name="tolerance"/>
         </Action>
         <Action ID="MoveArmToPredefined">
             <input_port default="offer" name="position"/>
@@ -125,9 +172,42 @@
             <input_port default="0" name="distance_tolerance"/>
             <input_port default="object1" name="tf_frame"/>
         </Action>
+        <Action ID="Patrol">
+            <input_port default="0.3" name="velocity"/>
+        </Action>
+        <Action ID="PickObject">
+            <input_port default="Bowl" name="tf_frame"/>
+        </Action>
+        <Action ID="PlaceObject">
+            <output_port default="tf" name="left_position"/>
+            <input_port default="tf" name="position"/>
+        </Action>
+        <Action ID="PourObjectToObject2">
+            <input_port default="tf2" name="position_obj2"/>
+        </Action>
+        <Action ID="PrintTarget">
+            <inout_port name="target"/>
+        </Action>
+        <Action ID="SetWaypoints"/>
         <Action ID="Speak">
             <input_port name="say_text"/>
         </Action>
+        <Action ID="StoreDetection">
+            <input_port name="entity"/>
+            <input_port name="id"/>
+        </Action>
+        <Condition ID="isListened">
+            <output_port name="gotten_parameters"/>
+            <input_port name="needed_parameters"/>
+            <output_port name="say_text"/>
+        </Condition>
+        <Condition ID="isPersonDetected">
+            <output_port name="say_text"/>
+        </Condition>
+        <Condition ID="isReceived">
+            <output_port name="needed_parameters"/>
+            <input_port name="received_parameters"/>
+        </Condition>
     </TreeNodesModel>
     <!-- ////////// -->
 </root>
