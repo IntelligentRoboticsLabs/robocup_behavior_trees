@@ -15,6 +15,7 @@
             <Action ID="MoveArmToPredefined" position="offer_clear_vision"/>
             <Action ID="LookAt" tf_frame="person_1"/>
             <Action ID="Speak" name="Return RUNNING until it has stop talking" say_text="please put the bag in my gripper"/>
+            <Action ID="LookAt" tf_frame="gripper"/>
             <RetryUntilSuccessful num_attempts="-1">
                 <Fallback>
                     <Condition ID="IsDetected" confidence="0.6" entity="bag" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
