@@ -12,7 +12,7 @@
                     <Action ID="MoveTo" distance_tolerance="0.5" tf_frame="Kitchen"/>
                     <ReactiveFallback>
                         <Condition ID="IsDetected" confidence="0.6" entity="table" frames="table_1" max_depth="2" max_entities="1" order="depth_nearest"/>
-                        <Action ID="Patrol" velocity="0.3"/>
+                        <Action ID="Spin" velocity="0.3"/>
                     </ReactiveFallback>
                 </Sequence>
             </RetryUntilSuccessful>
@@ -172,9 +172,6 @@
             <input_port default="0" name="distance_tolerance"/>
             <input_port default="object1" name="tf_frame"/>
         </Action>
-        <Action ID="Patrol">
-            <input_port default="0.3" name="velocity"/>
-        </Action>
         <Action ID="PickObject">
             <input_port default="Bowl" name="tf_frame"/>
         </Action>
@@ -191,6 +188,9 @@
         <Action ID="SetWaypoints"/>
         <Action ID="Speak">
             <input_port name="say_text"/>
+        </Action>
+        <Action ID="Spin">
+            <input_port default="0.3" name="velocity"/>
         </Action>
         <Action ID="StoreDetection">
             <input_port name="entity"/>

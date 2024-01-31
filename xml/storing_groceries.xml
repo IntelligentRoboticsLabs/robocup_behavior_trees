@@ -18,7 +18,7 @@
                     <RetryUntilSuccessful num_attempts="-1">
                         <Sequence name="">
                             <Action ID="LookAt" tf_frame="table"/>
-                            <Action ID="DetectNearestEntity" tf_frame="nearest"/>
+                            <Condition ID="IsDetected" confidence="0.6" entity="Bowl" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
                             <Action ID="PickObject" tf_frame="Bowl"/>
                             <Action ID="MoveArmTo" tf_frame="camera_frame" tolerance="0.6"/>
                             <Condition ID="IsDetected" confidence="0.6" entity="nearest" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
@@ -33,7 +33,7 @@
                         </ReactiveFallback>
                     </RetryUntilSuccessful>
                     <Action ID="LookAt" tf_frame="shelf"/>
-                    <Action ID="DetermineObjectPosition" tf_frame="nearest" tf_frame_to_put="to_place"/>
+                    <Action ID="FindCorrectPlace" tf_frame="nearest" tf_frame_to_put="to_place"/>
                     <Action ID="PlaceObject" left_position="placed_at" position="tf"/>
                 </Sequence>
             </Repeat>
@@ -59,10 +59,6 @@
             <input_port default="Table" name="Object"/>
             <output_port name="tf"/>
         </Action>
-        <Action ID="DetermineObjectPosition">
-            <input_port default="nearest" name="tf_frame"/>
-            <output_port default="to_place" name="tf_frame_to_put"/>
-        </Action>
         <SubTree ID="Dialog">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
         </SubTree>
@@ -74,6 +70,10 @@
         </Action>
         <Action ID="ExtractBagPosition">
             <output_port name="position"/>
+        </Action>
+        <Action ID="FindCorrectPlace">
+            <input_port default="nearest" name="tf_frame"/>
+            <output_port default="to_place" name="tf_frame_to_put"/>
         </Action>
         <Action ID="FindEmptyPlace">
             <output_port default="position" name="position"/>
