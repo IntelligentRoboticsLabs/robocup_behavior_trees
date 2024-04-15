@@ -2,65 +2,69 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <Repeat num_cycles="2">
-            <Sequence>
+        <Sequence>
+            <Action ID="SetWaypoints" name="set waypoints from ros params"/>
+            <Action ID="InitReceptionist" n="{n}"/>
+            <Repeat num_cycles="2">
                 <Sequence>
-                    <Action ID="SetWaypoints" name="set waypoints from ros params"/>
-                    <Action ID="InitReceptionist"/>
-                </Sequence>
-                <Action ID="MoveTo" distance_tolerance="0" tf_frame="entrance"/>
-                <Action ID="Speak" say_text="Hi, this is tiago. Im ready to receive the party guests"/>
-                <RetryUntilSuccessful num_attempts="-1">
-                    <Fallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="person" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
-                        <Inverter>
-                            <Action ID="Speak" say_text="I cant see you, can you please stand in front of me"/>
-                        </Inverter>
-                        <Delay delay_msec="1000">
-                            <AlwaysFailure/>
-                        </Delay>
-                    </Fallback>
-                </RetryUntilSuccessful>
-                <Action ID="StoreDetection" entity="person" id="guest_1"/>
-                <Action ID="LookAt" tf_frame="person_1"/>
-                <RetryUntilSuccessful num_attempts="-1">
-                    <SequenceStar>
-                        <Sequence>
-                            <Action ID="AskForSomething" Intention="name" intention_value="{name_value}"/>
-                            <Action ID="DialogConfirmation" prompt="are you {name_value}"/>
-                        </Sequence>
-                        <Sequence>
-                            <Action ID="AskForSomething" Intention="favorite_drink" intention_value="{drink_value}"/>
-                            <Action ID="DialogConfirmation" prompt="is {drink_value} your choice of preference?"/>
-                        </Sequence>
-                    </SequenceStar>
-                </RetryUntilSuccessful>
-                <Action ID="Speak" say_text="Please follow me, i will get you to the  party"/>
-                <Action ID="MoveTo" distance_tolerance="0" tf_frame="party"/>
-                <ReactiveSequence>
+                    <Action ID="MoveTo" distance_tolerance="0" tf_frame="entrance"/>
+                    <Action ID="Speak" say_text="Hi, this is Gentlebot. I'm ready to receive a new guest"/>
+                    <RetryUntilSuccessful num_attempts="-1">
+                        <Fallback>
+                            <Condition ID="IsDetected" confidence="0.6" entity="person" frames="" max_depth="2" max_entities="1" order="depth_nearest"/>
+                            <Inverter>
+                                <Action ID="Speak" say_text="I can't see you, can you please stand in front of me?"/>
+                            </Inverter>
+                            <Delay delay_msec="1000">
+                                <AlwaysFailure/>
+                            </Delay>
+                        </Fallback>
+                    </RetryUntilSuccessful>
+                    <Action ID="StoreDetection" entity="person_0" id="{n}"/>
+                    <Action ID="LookAt" tf_frame="person_0"/>
+                    <RetryUntilSuccessful num_attempts="-1">
+                        <SequenceStar>
+                            <Sequence>
+                                <Action ID="Speak" say_text="What is your name?"/>
+                                <Action ID="Listen" listen_text="{understood}"/>
+                                <Action ID="Query" Intention="name" intention_value="{name_value}" text="{understood}"/>
+                                <Action ID="DialogConfirmation" prompt="Is your name {name_value}?"/>
+                            </Sequence>
+                            <Sequence>
+                                <Action ID="Speak" say_text="What would you like to drink?"/>
+                                <Action ID="Listen" listen_text="{understood}"/>
+                                <Action ID="Query" Intention="drink" intention_value="{drink_value}" text="{understood}"/>
+                                <Action ID="DialogConfirmation" prompt="Is {drink_value} your choice of preference?"/>
+                            </Sequence>
+                        </SequenceStar>
+                    </RetryUntilSuccessful>
+                    <Action ID="Speak" say_text="Please follow me, i will get you to the  party"/>
+                    <Action ID="MoveTo" distance_tolerance="0" tf_frame="party"/>
+                    <ReactiveSequence>
+                        <ReactiveFallback>
+                            <Action ID="LookAround" direction="left"/>
+                            <Condition ID="IsDetected" confidence="0.6" entity="person" frames="{frames}" max_depth="2" max_entities="1" order="depth_nearest"/>
+                        </ReactiveFallback>
+                        <Action ID="LookAt" tf_frame="{frames}"/>
+                        <Action ID="Speak" say_text="Hi, this is {name}, and their favorite drink is {favourite_drink}"/>
+                    </ReactiveSequence>
                     <ReactiveFallback>
-                        <Condition ID="IsDetected" confidence="0.6" entity="person" frames="{frames}" max_depth="2" max_entities="1" order="depth_nearest"/>
-                        <Action ID="GoBack" velocity="0.1"/>
+                        <Condition ID="IsSittable" tf_frame="chair_frame"/>
+                        <Action ID="LookAround" direction="left"/>
                     </ReactiveFallback>
-                    <Action ID="LookAt" tf_frame="{frames}"/>
-                    <Action ID="Speak" say_text="Hi {host_name} this is {name},and his favorite drink is {favorite_drink}"/>
-                </ReactiveSequence>
-                <ReactiveFallback>
-                    <Condition ID="IsSittable" tf_frame="chair_direction"/>
-                    <Action ID="LookAround"/>
-                </ReactiveFallback>
-                <Action ID="Speak" say_text="Please, you can sit overthere"/>
-                <Action ID="LookAt" tf_frame="chair_direction"/>
-                <Action ID="MoveArmTo" tf_frame="chair_direction" tolerance="0"/>
-                <Action ID="MoveArmToPredefined" position="home"/>
-            </Sequence>
-        </Repeat>
+                    <Action ID="PointAt" frame_to_point="chair_frame"/>
+                    <Action ID="LookAt" tf_frame="chair_frame"/>
+                    <Action ID="Speak" say_text="Please, sit over there"/>
+                    <Action ID="MoveArmToPredefined" position="home"/>
+                    <Action ID="AddGuestToCount" n="{n}"/>
+                </Sequence>
+            </Repeat>
+        </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
-        <Action ID="AskForSomething">
-            <input_port default="name" name="Intention"/>
-            <output_port name="intention_value"/>
+        <Action ID="AddGuestToCount">
+            <inout_port name="n">Number of guests introduced</inout_port>
         </Action>
         <Action ID="CalculateGoal">
             <inout_port name="goal"/>
@@ -88,7 +92,9 @@
             <input_port name="entity_frame"/>
             <input_port name="tolerance"/>
         </Condition>
-        <Action ID="InitReceptionist"/>
+        <Action ID="InitReceptionist">
+            <output_port default="0" name="n">Number of guests introduced</output_port>
+        </Action>
         <Condition ID="IsDetected">
             <input_port default="0.6" name="confidence"/>
             <input_port default="person" name="entity"/>
@@ -107,10 +113,11 @@
             <output_port name="tf_frame"/>
         </Condition>
         <Action ID="Listen">
-            <output_port name="extracted_info">String list of extracted information</output_port>
-            <output_port name="say_text">String to speak</output_port>
+            <output_port name="listen_text">What the robot understood</output_port>
         </Action>
-        <Action ID="LookAround"/>
+        <Action ID="LookAround">
+            <input_port name="direction"/>
+        </Action>
         <Action ID="LookAt">
             <input_port name="tf_frame"/>
         </Action>
@@ -132,8 +139,16 @@
             <input_port default="0" name="distance_tolerance"/>
             <input_port default="object1" name="tf_frame"/>
         </Action>
+        <Action ID="PointAt">
+            <input_port name="frame_to_point"/>
+        </Action>
         <Action ID="PrintTarget">
             <inout_port name="target"/>
+        </Action>
+        <Action ID="Query">
+            <input_port default="name" name="Intention"/>
+            <output_port name="intention_value"/>
+            <input_port name="text">what human said</input_port>
         </Action>
         <Action ID="SetWaypoints"/>
         <Action ID="Speak">
